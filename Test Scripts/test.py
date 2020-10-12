@@ -5,4 +5,5 @@ while (True):
 
     print(round(ticks))
     print(round(ticks)*2)
+    3204894608
     time.sleep(1) 

@@ -19,11 +19,3 @@ for task in tasks:
 
 
 
-"""
-
-tasks = table_service.query_entities(
-    'D41Strombezug', filter="paid eq 'null'")
-for task in tasks:
-    print(task.value)
-    print(task.paid)
-"""
