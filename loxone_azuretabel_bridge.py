@@ -51,6 +51,8 @@ class loxMessagetoAzureTabel(object):
         entity.RowKey = str(100000000000000 - round(time.time()) )
         entity.value = data[1]
         entity.unit = data[2]
+        entity.paid = False
+        entity.cleared = False
         self.table_service.insert_entity('D41Strombezug', entity)
 
 
