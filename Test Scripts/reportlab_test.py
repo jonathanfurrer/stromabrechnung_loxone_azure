@@ -19,6 +19,15 @@ class generate_invoice(object):
     u = 2 * cm #unten
     b = 21 * cm #breite
     h = 29.7 * cm #höhe
+    t = 17 * cm #starthöhe Tabelle
+    z = 0.45 * cm #Zeilen Abstand Tabelle
+
+    #Spalten
+    x1 = l # Periode
+    x2 = 5 * cm # Beschreibung
+    x3 = 10 * cm # Anzahl
+    x4 = 14 * cm # Preis pro Stück
+    x5 = r # Total
 
     # Farben
     u_blue = Color( 0, 0.6, 0.6)
@@ -27,9 +36,11 @@ class generate_invoice(object):
         today = date.today()
         pdfName = "Stromrechnung_" + wohnung + "_" + today.strftime("%Y-%m") + ".pdf"
         self.canv = Canvas(pdfName, pagesize=A4) # 21cm * 29.7cm
+        self.totalAmount = 0
         pass
 
-    def _createHeader(self):
+    def createHeader(self):
+
         # D41 Strom 
         x = self.l
         y = self.h - self.o
@@ -49,7 +60,6 @@ class generate_invoice(object):
         self.canv.setFillColor(gray)  
         self.canv.drawString(x, y + (-0.5 * cm), today.strftime("%B %Y") + " / " + wohnung)
 
-    def _createCustomerAdresse(self,name,vorname,addresse,ort,plz,email):
         # Kunde
         x = self.l
         y = 24 * cm
@@ -67,14 +77,6 @@ class generate_invoice(object):
         self.canv.drawString(x , y - (3*z) , plz + " " + ort)
         self.canv.drawString(x , y - (4*z) , email)
 
-    def newInvoice(self,  empfänger , email ,month_kwh_day, month_kwh_night, kwh_preis_day, kwh_preis_night, grundgebühr):
-        self.createHeader()
-
-        self._createCustomerAdresse()
-        
-
-        
-
         # zu bezahlen an
         x = 11 * cm
         y = 24 * cm
@@ -84,10 +86,11 @@ class generate_invoice(object):
         self.canv.setFillColor(u_blue)  
         self.canv.drawRightString (x - abstand , y , "bezahlen an:")
         self.canv.setFillColor(black)  
-        self.canv.drawString(x , y, "Samuel Hossmann & Jonathan Furrer")
-        self.canv.drawString(x , y - z, "Diessbachgrabenstrasse 41")
-        self.canv.drawString(x , y - (2*z) , "3672 Oberdiessbach")
-
+        self.canv.drawString(x , y - (1*z), vorname  + " " + name)
+        self.canv.drawString(x , y - (2*z), addresse)
+        self.canv.drawString(x , y - (3*z) , plz + " " + ort)
+        self.canv.drawString(x , y - (4*z) , email)
+    
         # Bank Verbindung
         y = 22.5 * cm
         z = 0.45 * cm
@@ -97,16 +100,6 @@ class generate_invoice(object):
         self.canv.setFillColor(black)  
         self.canv.drawString(x , y, "Bank SLM Konolfingen")
         self.canv.drawString(x , y - z, "IBAN: 023840982923498234")
-
-        # Fragen an
-        y = 21 * cm
-        z = 0.45 * cm
-        self.canv.setFont('Helvetica', 10)
-        self.canv.setFillColor(u_blue)  
-        self.canv.drawRightString (x - abstand, y , "Fragen:")
-        self.canv.setFillColor(black)  
-        self.canv.drawString(x , y, "Jonathan Furrer")
-        self.canv.drawString(x , y - z, "jonathan.furrer@gmail.com")
 
         # offizielle Preise
         y = 19.5 * cm
@@ -119,105 +112,64 @@ class generate_invoice(object):
         self.canv.setFont('Helvetica-Oblique', 7)
         self.canv.drawString(x , y - z, "oberdiessbach.ch/artikel/896/Verwaltung/Bauverwaltung/Elektrizitätsversorgung")
 
-
-
-        # Zussamenstellung 
-        y = 17 * cm
-        z = 0.45 * cm
-        #Spalten
-        x1 = l # Periode
-        x2 = 5 * cm # Beschreibung
-        x3 = 10 * cm # Anzahl
-        x4 = 14 * cm # Preis pro Stück
-        x5 = r # Total
-
+       
         # 1 Linie
         p = self.canv.beginPath()
-        p.moveTo(l,y)
-        p.lineTo(r,y)
+        p.moveTo(self.l,self.t)
+        p.lineTo(self.r,self.t)
         self.canv.drawPath(p, stroke=1, fill=1)
-
-        
+    
         # Überschriften
-        self.canv.setFillColor(u_blue)  
+        self.canv.setFillColor(self.u_blue)  
         self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (x1 , y - z, "Periode")
-        self.canv.drawString (x2 , y - z, "Beschreibung")
-        self.canv.drawString (x3 ,y - z, "Anzahl")
-        self.canv.drawString (x4 , y - z, "Preis pro Stück")
+        self.canv.drawString (self.x1 , self.t - self.z, "Periode")
+        self.canv.drawString (self.x2 , self.t - self.z, "Beschreibung")
+        self.canv.drawString (self.x3 ,self.t - self.z, "Anzahl")
+        self.canv.drawString (self.x4 , self.t - self.z, "Preis pro Stück")
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawRightString (x5 , y - z, "Total")
+        self.canv.drawRightString (self.x5 , self.t - self.z, "Total")
 
         # 2 Linie
         i = 2
         p = self.canv.beginPath()
-        p.moveTo(l,y -i*z)
-        p.lineTo(r,y -i*z)
+        p.moveTo(self.l,self.t - 2*self.z)
+        p.lineTo(self.r,self.t - 2*self.z)
         self.canv.drawPath(p, stroke=1, fill=1)
 
-        # Total init
-        total = 0
-        # 1er Eintrag
-        i = 3
+
+    def newEntity(self,iLineNr, sPeriode, sBeschreibung, sAnzahl, sPreisProStück, sTotal):
+        y = self.t - ((3 + iLineNr) * self.z)
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (x1 , y - (i*z), today.strftime("%B %Y"))
-        self.canv.drawString (x2 , y - (i*z), "Hochtarif / Tag")
-        self.canv.drawString (x3 ,y - (i*z), str(month_kwh_day) + " kWh")
-        self.canv.drawString (x4 , y - (i*z), str(kwh_preis_day) + " CHF")
+        self.canv.drawString (x1 , y - (i*z), sPeriode)
+        self.canv.drawString (x2 , y - (i*z), sBeschreibung)
+        self.canv.drawString (x3 ,y - (i*z), sAnzahl)
+        self.canv.drawString (x4 , y - (i*z), sPreisProStück)
         self.canv.setFont('Helvetica-Bold', 10)
-        subtotal = round(month_kwh_day * kwh_preis_day, 2)
-        total += subtotal
-        self.canv.drawRightString (x5 , y - (i*z), str(subtotal) + " CHF")
-
-        # 2er Eintrag
-        i = 4
-        self.canv.setFillColor(black)  
-        self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (x1 , y - (i*z), today.strftime("%B %Y"))
-        self.canv.drawString (x2 , y - (i*z), "Niedertarif / Nacht")
-        self.canv.drawString (x3 ,y - (i*z), str(month_kwh_night) + " kWh")
-        self.canv.drawString (x4 , y - (i*z), str(kwh_preis_night) + " CHF")
-        self.canv.setFont('Helvetica-Bold', 10)
-        subtotal = round(month_kwh_night * kwh_preis_night, 2)
-        total += subtotal
-        self.canv.drawRightString (x5 , y - (i*z), str(subtotal) + " CHF")
-
-        # 3er Eintrag
-        i = 5
-        self.canv.setFillColor(black)  
-        self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (x1 , y - (i*z), today.strftime("%B %Y"))
-        self.canv.drawString (x2 , y - (i*z), "Grundgebühr")
-        self.canv.drawString (x3 ,y - (i*z),"1x pro Jahr")
-        self.canv.drawString (x4 , y - (i*z), str(grundgebühr) + " CHF")
-        self.canv.setFont('Helvetica-Bold', 10)
-        subtotal = round(grundgebühr / 12, 2)
-        total += subtotal
-        self.canv.drawRightString (x5 , y - (i*z), str(subtotal) + " CHF")
-
-        # 3 Linie
-        i = 6
+        self.canv.drawRightString (x5 , y - (i*z), sTotal)
+    
+    def newLine(self,iLineNr):
+        y = self.t - ((3 + iLineNr) * self.z)
         p = self.canv.beginPath()
-        p.moveTo(l,y -i*z)
-        p.lineTo(r,y -i*z)
+        p.moveTo(self.l,y )
+        p.lineTo(self.r,y)
         self.canv.drawPath(p, stroke=1, fill=1)
 
-        # Total Tabelle
-        i = 7
+    def drawTotal(self,iLineNr, sTotal, sCurrency):
+        y = self.t - ((3 + iLineNr) * self.z)
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawRightString (x5 , y - (i*z), str(total) + " CHF")
+        self.canv.drawRightString (self.x5 , y, sTotal + " " + sCurrency)
 
-
+    def drawTotalFancy(self, sTotal, sCurrency):
         # Total Fancy
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica-BoldOblique', 18)
         x = 5 * cm
         y = 19.5 * cm
-        self.canv.drawRightString (x , y, str(total))
+        self.canv.drawRightString (x , y, sTotal)
         self.canv.setFont('Helvetica-Oblique', 10)
-        self.canv.drawString (x , y, " CHF")
+        self.canv.drawString (x , y, (" " + sCurrency))
 
         # Linie
         p = self.canv.beginPath()
@@ -228,6 +180,19 @@ class generate_invoice(object):
 
         self.canv.drawPath(p, stroke=1)
         self.canv.save()
+
+
+    def getInvoice(self,  empfänger , email ,month_kwh_day, month_kwh_night, kwh_preis_day, kwh_preis_night, grundgebühr):
+        
+        self.createHeader()
+
+
+
+
+        
+
+
+        
 
 
 def main():

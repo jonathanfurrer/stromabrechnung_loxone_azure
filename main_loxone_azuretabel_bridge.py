@@ -15,12 +15,7 @@ global UDP_PORT
 UDP_IP = "192.168.100.20"
 UDP_PORT = 54120
 
-# Config logging
-# logging.basicConfig(filename="/home/pi/git/unifi_loxone_bridge/log.log",
-logging.basicConfig(filename="log.log",
-                    level=logging.DEBUG,
-                    format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',)
+
 
 class alive_to_Lox(object):
     def __init__(self):
