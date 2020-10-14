@@ -19,6 +19,7 @@ try:
     credential = "eFH0EUaE6HU8GaqS9S04vf2MLdQ94vMdbMg6kaMetKG1gXU8g+QUtfAKxbtvyjj6Vrq4X3E0hBVNe5gIzjFZHQ=="
     table_service = TableService(
         account_name="jofustrom456789", account_key=credential)
+        
     logging.debug("connected to Azure Table Storage")
 except:
     logging.warning("could not connect to Azure Table Storage")
