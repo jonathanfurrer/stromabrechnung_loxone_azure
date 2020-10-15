@@ -48,7 +48,7 @@ class loxMessagetoAzureTabel(object):
         entity.unit = data[2]
         entity.paid = False
         entity.cleared = False
-        self.table_service.insert_entity('D41Strombezug', entity)
+        self.table_service.insert_entity('Strombezug', entity)
 
 
 class recive_datafromLox(object):

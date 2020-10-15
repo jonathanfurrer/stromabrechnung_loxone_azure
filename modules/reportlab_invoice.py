@@ -11,7 +11,7 @@ from reportlab.lib.colors import Color, black, blue, red, gray, lightblue
 from datetime import date
 
 
-class generate_invoice(object):
+class generate_invoice():
     # Abstände 
     l = 2 * cm  #linker abstand
     r = 19 * cm #rechter abstand
@@ -19,7 +19,7 @@ class generate_invoice(object):
     u = 2 * cm #unten
     b = 21 * cm #breite
     h = 29.7 * cm #höhe
-    t = 17 * cm #starthöhe Tabelle
+    t = 19 * cm #starthöhe Tabelle
     z = 0.45 * cm #Zeilen Abstand Tabelle
 
     #Spalten
@@ -32,12 +32,15 @@ class generate_invoice(object):
     # Farben
     u_blue = Color( 0, 0.6, 0.6)
 
-    def __init__(self,wohnung):
-        today = date.today()
-        pdfName = "Stromrechnung_" + wohnung + "_" + today.strftime("%Y-%m") + ".pdf"
+    def __init__(self,address_kunde,address_an,bank,):
+        self.today = date.today()
+        self.address_kunde = address_kunde
+        self.address_an = address_an
+        self.bank = bank
+        pdfName = "Stromrechnung_" + self.address_kunde.wohnung + "_" + self.today.strftime("%Y-%m") + ".pdf"
         self.canv = Canvas(pdfName, pagesize=A4) # 21cm * 29.7cm
         self.totalAmount = 0
-        pass
+        self.createHeader()
 
     def createHeader(self):
 
@@ -58,11 +61,11 @@ class generate_invoice(object):
         self.canv.drawString(x, y, "#Rechnung")
         self.canv.setFont('Helvetica', 13)
         self.canv.setFillColor(gray)  
-        self.canv.drawString(x, y + (-0.5 * cm), today.strftime("%B %Y") + " / " + wohnung)
+        self.canv.drawString(x, y + (-0.5 * cm), self.today.strftime("%B %Y") + " / " + self.address_kunde.wohnung)
 
         # Kunde
         x = self.l
-        y = 24 * cm
+        y = 25 * cm
         z = 0.45 * cm
         self.canv.setFont('Helvetica', 10)
         self.canv.setFillColor(self.u_blue)  
@@ -70,42 +73,45 @@ class generate_invoice(object):
         self.canv.setFillColor(black)  
         x = 3.3 * cm
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawString(x , y, self.wohnung)
+        self.canv.drawString(x , y, self.address_kunde.wohnung)
         self.canv.setFont('Helvetica', 10)
-        self.canv.drawString(x , y - (1*z), vorname  + " " + name)
-        self.canv.drawString(x , y - (2*z), addresse)
-        self.canv.drawString(x , y - (3*z) , plz + " " + ort)
-        self.canv.drawString(x , y - (4*z) , email)
+        self.canv.drawString(x , y - (1*z), self.address_kunde.vorname  + " " + self.address_kunde.nachname)
+        self.canv.drawString(x , y - (2*z), self.address_kunde.adresse)
+        self.canv.drawString(x , y - (3*z) , self.address_kunde.plz + " " + self.address_kunde.ort)
+        self.canv.drawString(x , y - (4*z) , self.address_kunde.email)
 
         # zu bezahlen an
         x = 11 * cm
-        y = 24 * cm
+        y = 23.5 * cm
         z = 0.45 * cm
         abstand = 0.2 *cm
         self.canv.setFont('Helvetica', 10)
-        self.canv.setFillColor(u_blue)  
+        self.canv.setFillColor(self.u_blue)  
         self.canv.drawRightString (x - abstand , y , "bezahlen an:")
         self.canv.setFillColor(black)  
-        self.canv.drawString(x , y - (1*z), vorname  + " " + name)
-        self.canv.drawString(x , y - (2*z), addresse)
-        self.canv.drawString(x , y - (3*z) , plz + " " + ort)
-        self.canv.drawString(x , y - (4*z) , email)
+        self.canv.drawString(x , y - (0*z), self.bank.inhaber1 )
+        self.canv.drawString(x , y - (1*z), self.bank.inhaber2)
+        self.canv.drawString(x , y - (2*z), self.address_an.adresse)
+        self.canv.drawString(x , y - (3*z) ,self.address_an.plz + " " + self.address_an.ort)
+        self.canv.drawString(x , y - (4*z) ,self.address_an.email)
     
         # Bank Verbindung
-        y = 22.5 * cm
+        y = 25 * cm
         z = 0.45 * cm
         self.canv.setFont('Helvetica', 10)
-        self.canv.setFillColor(u_blue)  
+        self.canv.setFillColor(self.u_blue)  
         self.canv.drawRightString (x - abstand, y , "Bank:")
         self.canv.setFillColor(black)  
-        self.canv.drawString(x , y, "Bank SLM Konolfingen")
-        self.canv.drawString(x , y - z, "IBAN: 023840982923498234")
+        self.canv.drawString(x , y, self.bank.namebank)
+        self.canv.drawString(x , y - z, self.bank.kontonr)
+        self.canv.drawString(x , y - (2*z), self.bank.iban)
+
 
         # offizielle Preise
-        y = 19.5 * cm
+        y = 21 * cm
         z = 0.45 * cm
         self.canv.setFont('Helvetica', 10)
-        self.canv.setFillColor(u_blue)  
+        self.canv.setFillColor(self.u_blue)  
         self.canv.drawRightString (x - abstand, y , "Info's:")
         self.canv.setFillColor(black)  
         self.canv.drawString(x , y, "Preise Strom Oberdiessbach")
@@ -141,12 +147,12 @@ class generate_invoice(object):
         y = self.t - ((3 + iLineNr) * self.z)
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (x1 , y - (i*z), sPeriode)
-        self.canv.drawString (x2 , y - (i*z), sBeschreibung)
-        self.canv.drawString (x3 ,y - (i*z), sAnzahl)
-        self.canv.drawString (x4 , y - (i*z), sPreisProStück)
+        self.canv.drawString (self.x1 , y , sPeriode)
+        self.canv.drawString (self.x2 , y , sBeschreibung)
+        self.canv.drawString (self.x3 ,y , sAnzahl)
+        self.canv.drawString (self.x4 , y , sPreisProStück)
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawRightString (x5 , y - (i*z), sTotal)
+        self.canv.drawRightString (self.x5 , y , sTotal)
     
     def newLine(self,iLineNr):
         y = self.t - ((3 + iLineNr) * self.z)
@@ -166,7 +172,7 @@ class generate_invoice(object):
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica-BoldOblique', 18)
         x = 5 * cm
-        y = 19.5 * cm
+        y = 21.5 * cm
         self.canv.drawRightString (x , y, sTotal)
         self.canv.setFont('Helvetica-Oblique', 10)
         self.canv.drawString (x , y, (" " + sCurrency))
@@ -174,31 +180,13 @@ class generate_invoice(object):
         # Linie
         p = self.canv.beginPath()
         p.moveTo(x + 1 * cm,y + 0.2 * cm)
-        p.lineTo(x + 3 * cm,y + 0.2 * cm)
-        p.lineTo(x + 3 * cm,24.1 * cm)
-        p.lineTo(x + 3.5 * cm,24.1 * cm)
+        p.lineTo(x + 3.5 * cm,y + 0.2 * cm)
+        p.lineTo(x + 3.5 * cm,25.1 * cm)
+        p.lineTo(x + 4.5 * cm,25.1 * cm)
 
         self.canv.drawPath(p, stroke=1)
-        self.canv.save()
-
-
-    def getInvoice(self,  empfänger , email ,month_kwh_day, month_kwh_night, kwh_preis_day, kwh_preis_night, grundgebühr):
         
-        self.createHeader()
+    def save(self):
+        self.canv.save()      
+    
 
-
-
-
-        
-
-
-        
-
-
-def main():
-    g = generate_invoice()
-    g.newInvoice("272-4", "Jonathan Furrer", "jonathan.furrer@gmail.com", 30,60,0.22,0.15,100)
-
-
-if __name__ == '__main__':
-    main()

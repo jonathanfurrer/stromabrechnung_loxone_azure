@@ -6,6 +6,7 @@ from azure.cosmosdb.table.tableservice import TableService
 from azure.cosmosdb.table.models import Entity
 #Local import
 from modules.dataObjects import BankData,CustomerData
+from modules.reportlab_invoice import generate_invoice
 
 
 # Config logging
@@ -23,6 +24,7 @@ try:
     logging.debug("connected to Azure Table Storage")
 except:
     logging.warning("could not connect to Azure Table Storage")
+    exit
 
 # Get newest Adress Data from Azure
 try:
@@ -49,6 +51,22 @@ try:
 except:
     logging.warning("failed to load adress data from azure table 272-4")
 
+try:
+    bank = table_service.get_entity('Bankverbindung','Universalkonto','1')
+    bankData = BankData(namebank=bank.NameBank, iban=bank.IBAN,kontonr=bank.KontoNr,inhaber1=bank.Inhaber1,inhaber2=bank.Inhaber2)
+except:
+    logging.warning("failed to load adress data from azure table Bankverbindung")
+
+
+
+inv = generate_invoice(address_kunde=adressData272_1,address_an=adressData272_4,bank=bankData)
+inv.newEntity(1,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
+inv.newEntity(2,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
+inv.newEntity(3,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
+inv.newLine(4)
+inv.drawTotal(5,"30.00", "CHF")
+inv.drawTotalFancy("30.00", "CHF")
+inv.save()
 
 
 
