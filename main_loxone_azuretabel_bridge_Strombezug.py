@@ -4,6 +4,7 @@ import socket
 import logging
 import time
 import threading
+import datetime
 # Azure Table
 from os import pipe
 from azure.cosmosdb.table.tableservice import TableService
@@ -12,8 +13,10 @@ from azure.cosmosdb.table.models import Entity
 # Variables
 global UDP_IP
 global UDP_PORT
+
 UDP_IP = "192.168.100.20"
 UDP_PORT = 54120
+
 
 
 
@@ -33,22 +36,31 @@ class alive_to_Lox(object):
             time.sleep(5)
 
 class loxMessagetoAzureTabel(object):
+    TABLE_STROMBEZUG = "Strombezug"
     def __init__(self):
         credential = "eFH0EUaE6HU8GaqS9S04vf2MLdQ94vMdbMg6kaMetKG1gXU8g+QUtfAKxbtvyjj6Vrq4X3E0hBVNe5gIzjFZHQ=="
         self.table_service = TableService(account_name="jofustrom456789", account_key=credential)
 
     def send_newMessage_to_Azure(self, msg):
+        now = datetime.datetime.now()
         msg = str(msg)
         msg = msg[2:-1]
         data = msg.split("$")
-        entity = Entity()
-        entity.PartitionKey = data[0]
-        entity.RowKey = str(100000000000000 - round(time.time()) )
-        entity.value = data[1]
-        entity.unit = data[2]
-        entity.paid = False
-        entity.cleared = False
-        self.table_service.insert_entity('Strombezug', entity)
+        PartitionKey = data[0]
+        f = "PartitionKey eq '" + str(PartitionKey) + "' and Year eq " + str(now.year) + " and Month eq " + str(now.month)
+        existing_entity = self.table_service.query_entities(self.TABLE_STROMBEZUG, filter=f , timeout=60)
+        existing_entity = list(existing_entity)
+        if (len(existing_entity) <= 0):
+                entity = Entity()
+                entity.PartitionKey = PartitionKey
+                entity.RowKey = str(100000000000000 - round(time.time()) )
+                entity.Year = now.year
+                entity.Month = now.month
+                entity.value = data[1]
+                entity.unit = data[2]
+                entity.paid = False
+                entity.cleared = False
+                self.table_service.insert_entity(self.TABLE_STROMBEZUG, entity)
 
 
 class recive_datafromLox(object):
