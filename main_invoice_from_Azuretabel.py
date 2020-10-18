@@ -1,6 +1,7 @@
 ﻿# IMPORT --------------------------------------------------------------
 # Utility
 import logging
+import datetime
 # Azure Cosmos
 from azure.cosmosdb.table.tableservice import TableService
 from azure.cosmosdb.table.models import Entity
@@ -8,6 +9,21 @@ from azure.cosmosdb.table.models import Entity
 from modules.dataObjects import BankData,CustomerData
 from modules.reportlab_invoice import generate_invoice
 
+TABLE_STROMBEZUG = "Strombezug"
+MONTHS = [('Januar'),
+        ('Februar'),
+        ('März'),
+        ('April'),
+        ('Mai',),
+        ('Juni'),
+        ('Juli'),
+        ('August'),
+        ('September'),
+        ('Oktober'),
+        ('November'),
+        ('Dezember')]
+
+now = datetime.datetime.now()
 
 # Config logging
 # logging.basicConfig(filename="/home/pi/git/unifi_loxone_bridge/log.log",
@@ -51,6 +67,7 @@ try:
 except:
     logging.warning("failed to load adress data from azure table 272-4")
 
+# Bank --------------------------------------------------
 try:
     bank = table_service.get_entity('Bankverbindung','Universalkonto','1')
     bankData = BankData(namebank=bank.NameBank, iban=bank.IBAN,kontonr=bank.KontoNr,inhaber1=bank.Inhaber1,inhaber2=bank.Inhaber2)
@@ -59,10 +76,31 @@ except:
 
 
 
+# Generate Invoice for 272-1
+# Get Invoice information
+f = "PartitionKey eq '272-4' and cleared eq false"        
+try:
+    open_invoice = table_service.query_entities(TABLE_STROMBEZUG, filter=f , timeout=60)
+
+except:
+    logging.warning("failed to load adress data from azure table Bankverbindung")
+
+# Preise ------------------------------------------------
+f = "PartitionKey eq 'Grundgebühr' and Year eq " + now.year    
+try:
+    grundgebühr = table_service.query_entities(TABLE_STROMBEZUG, filter=f , timeout=60)
+except:
+    logging.warning("failed to load adress data from azure table Bankverbindung")
+
 inv = generate_invoice(address_kunde=adressData272_1,address_an=adressData272_4,bank=bankData)
-inv.newEntity(1,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
-inv.newEntity(2,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
-inv.newEntity(3,"Oktober","Hochtarif", "30", "0.22 CHF","23.00 CHF")
+
+total = 0
+line = 1
+open_invoice = list(open_invoice)
+for o in open_invoice:
+    print()
+    inv.newEntity(1,o.Month,"Hochtarif", "30", "0.22 CHF","23.00 CHF")
+
 inv.newLine(4)
 inv.drawTotal(5,"30.00", "CHF")
 inv.drawTotalFancy("30.00", "CHF")

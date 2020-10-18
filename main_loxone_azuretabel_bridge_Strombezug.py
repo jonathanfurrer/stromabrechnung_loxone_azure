@@ -47,17 +47,27 @@ class loxMessagetoAzureTabel(object):
         msg = msg[2:-1]
         data = msg.split("$")
         PartitionKey = data[0]
-        f = "PartitionKey eq '" + str(PartitionKey) + "' and Year eq " + str(now.year) + " and Month eq " + str(now.month)
+        if now.month == 1:
+            y = now.year -1
+            last_month = 12
+        else:
+            y = now.year
+            last_month = now.month-1
+
+        f = "PartitionKey eq '" + str(PartitionKey) + "' and year eq " + str(y) + " and month eq " + str(last_month) + " and tarif eq '" + str(data[1]) + "'"
+        print(f)
         existing_entity = self.table_service.query_entities(self.TABLE_STROMBEZUG, filter=f , timeout=60)
         existing_entity = list(existing_entity)
-        if (len(existing_entity) <= 0):
+
+        if (len(existing_entity) == 0):
                 entity = Entity()
                 entity.PartitionKey = PartitionKey
                 entity.RowKey = str(100000000000000 - round(time.time()) )
-                entity.Year = now.year
-                entity.Month = now.month
-                entity.value = data[1]
-                entity.unit = data[2]
+                entity.tarif = data[1]
+                entity.year = y
+                entity.month = last_month
+                entity.value = data[2]
+                entity.unit = data[3]
                 entity.paid = False
                 entity.cleared = False
                 self.table_service.insert_entity(self.TABLE_STROMBEZUG, entity)
