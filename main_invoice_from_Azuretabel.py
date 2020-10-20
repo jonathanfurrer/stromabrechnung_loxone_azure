@@ -9,7 +9,12 @@ from azure.cosmosdb.table.models import Entity
 from modules.dataObjects import BankData,CustomerData
 from modules.reportlab_invoice import generate_invoice
 
+TABLE_ADRESSEN = "Adressen"
+TABLE_BANKVERBINDUNG = "Bankverbindung"
+TABLE_PREISE = "Preise"
+TABLE_RECHNUNGEN = "Rechnungen"
 TABLE_STROMBEZUG = "Strombezug"
+
 MONTHS = [('Januar'),
         ('Februar'),
         ('März'),
@@ -44,32 +49,32 @@ except:
 
 # Get newest Adress Data from Azure
 try:
-    adress = table_service.get_entity('Adressen','272-1','1')
+    adress = table_service.get_entity(TABLE_ADRESSEN,'272-1','1')
     adressData272_1 = CustomerData(adress.Wohnung,adress.Vorname,adress.Name,adress.Adresse,adress.Ort,adress.PLZ,adress.email)
 except:
     logging.warning("failed to load adress data from azure table 272-1")
 
 try:
-    adress = table_service.get_entity('Adressen','272-2','2')
+    adress = table_service.get_entity(TABLE_ADRESSEN,'272-2','2')
     adressData272_2 = CustomerData(adress.Wohnung,adress.Vorname,adress.Name,adress.Adresse,adress.Ort,adress.PLZ,adress.email)
 except:
     logging.warning("failed to load adress data from azure table 272-2")
 
 try:
-    adress = table_service.get_entity('Adressen','272-3','3')
+    adress = table_service.get_entity(TABLE_ADRESSEN,'272-3','3')
     adressData272_3 = CustomerData(adress.Wohnung,adress.Vorname,adress.Name,adress.Adresse,adress.Ort,adress.PLZ,adress.email)
 except:
     logging.warning("failed to load adress data from azure table 272-3")
 
 try:
-    adress = table_service.get_entity('Adressen','272-4','4')
+    adress = table_service.get_entity(TABLE_ADRESSEN, '272-4','4')
     adressData272_4 = CustomerData(adress.Wohnung,adress.Vorname,adress.Name,adress.Adresse,adress.Ort,adress.PLZ,adress.email)
 except:
     logging.warning("failed to load adress data from azure table 272-4")
 
 # Bank --------------------------------------------------
 try:
-    bank = table_service.get_entity('Bankverbindung','Universalkonto','1')
+    bank = table_service.get_entity(TABLE_BANKVERBINDUNG,'Universalkonto','1')
     bankData = BankData(namebank=bank.NameBank, iban=bank.IBAN,kontonr=bank.KontoNr,inhaber1=bank.Inhaber1,inhaber2=bank.Inhaber2)
 except:
     logging.warning("failed to load adress data from azure table Bankverbindung")
@@ -81,25 +86,53 @@ except:
 f = "PartitionKey eq '272-4' and cleared eq false"        
 try:
     open_invoice = table_service.query_entities(TABLE_STROMBEZUG, filter=f , timeout=60)
-
 except:
     logging.warning("failed to load adress data from azure table Bankverbindung")
-
-# Preise ------------------------------------------------
-f = "PartitionKey eq 'Grundgebühr' and Year eq " + now.year    
-try:
-    grundgebühr = table_service.query_entities(TABLE_STROMBEZUG, filter=f , timeout=60)
-except:
-    logging.warning("failed to load adress data from azure table Bankverbindung")
-
-inv = generate_invoice(address_kunde=adressData272_1,address_an=adressData272_4,bank=bankData)
 
 total = 0
 line = 1
-open_invoice = list(open_invoice)
-for o in open_invoice:
-    print()
-    inv.newEntity(1,o.Month,"Hochtarif", "30", "0.22 CHF","23.00 CHF")
+# open_invoice = list(open_invoice)
+inv = generate_invoice(address_kunde=adressData272_1,address_an=adressData272_4,bank=bankData)
+
+for oi in open_invoice:
+    # Preise ------------------------------------------------
+    # Grundgebühr
+    f = "PartitionKey eq 'Grundgebühr' and Year eq " + str(oi.year)
+    try:
+        grundgebühr = table_service.query_entities(TABLE_PREISE, filter=f , timeout=60)
+        grundgebühr = list(grundgebühr) 
+    except:
+        logging.warning("failed to load adress data from azure table " + TABLE_PREISE)
+    # Hochtarif / Tag
+    f = "PartitionKey eq 'Hochtarif' and Year eq " + str(oi.year)
+    try:
+        hochtarif = table_service.query_entities(TABLE_PREISE, filter=f , timeout=60)
+        hochtarif = list(hochtarif)
+    except:
+        logging.warning("failed to load adress data from azure table " + TABLE_PREISE)
+    # Niedertarif / Nacht
+    f = "PartitionKey eq 'Niedertarif' and Year eq " + str(oi.year)
+    print(f)
+    try:
+        niedertarif = table_service.query_entities(TABLE_PREISE , filter=f , timeout=60)
+        niedertarif = list(niedertarif)   
+    except:
+        logging.warning("failed to load adress data from azure table " + TABLE_PREISE)
+
+    print(niedertarif)
+
+    if "day" in oi.tarif:
+        tarif = "Hochtarif / Tag"
+        preis = str(hochtarif[0].Preis) + " " +  str(hochtarif[0].Währung)
+        total =+ (hochtarif[0].Preis * oi.value)
+        subtotal = str(hochtarif[0].Preis * oi.value) + " " +  str(hochtarif[0].Währung)
+    else:
+        tarif = "Niedertarif / Nacht"
+        preis = str(niedertarif[0].Preis) + " " +  str(niedertarif[0].Währung)
+        total =+ (niedertarif[0].Preis * oi.value)
+        subtotal = str(niedertarif[0].Preis * oi.value) + " " +  str(niedertarif[0].Währung)
+
+    inv.newEntity(1,oi.Month,tarif, oi.value,preis ,subtotal)
 
 inv.newLine(4)
 inv.drawTotal(5,"30.00", "CHF")
