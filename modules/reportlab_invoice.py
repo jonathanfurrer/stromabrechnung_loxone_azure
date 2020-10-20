@@ -147,12 +147,12 @@ class generate_invoice():
         y = self.t - ((3 + iLineNr) * self.z)
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica', 10)
-        self.canv.drawString (self.x1 , y , sPeriode)
-        self.canv.drawString (self.x2 , y , sBeschreibung)
-        self.canv.drawString (self.x3 ,y , sAnzahl)
-        self.canv.drawString (self.x4 , y , sPreisProStück)
+        self.canv.drawString (self.x1 , y , str(sPeriode))
+        self.canv.drawString (self.x2 , y , str(sBeschreibung))
+        self.canv.drawString (self.x3 ,y , str(sAnzahl))
+        self.canv.drawString (self.x4 , y , str(sPreisProStück))
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawRightString (self.x5 , y , sTotal)
+        self.canv.drawRightString (self.x5 , y , str(sTotal))
     
     def newLine(self,iLineNr):
         y = self.t - ((3 + iLineNr) * self.z)
@@ -165,7 +165,7 @@ class generate_invoice():
         y = self.t - ((3 + iLineNr) * self.z)
         self.canv.setFillColor(black)  
         self.canv.setFont('Helvetica-Bold', 10)
-        self.canv.drawRightString (self.x5 , y, sTotal + " " + sCurrency)
+        self.canv.drawRightString (self.x5 , y, str(sTotal) + " " + str(sCurrency))
 
     def drawTotalFancy(self, sTotal, sCurrency):
         # Total Fancy
@@ -173,9 +173,9 @@ class generate_invoice():
         self.canv.setFont('Helvetica-BoldOblique', 18)
         x = 5 * cm
         y = 21.5 * cm
-        self.canv.drawRightString (x , y, sTotal)
+        self.canv.drawRightString (x , y, str(sTotal))
         self.canv.setFont('Helvetica-Oblique', 10)
-        self.canv.drawString (x , y, (" " + sCurrency))
+        self.canv.drawString (x , y, (" " + str(sCurrency)))
 
         # Linie
         p = self.canv.beginPath()

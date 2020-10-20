@@ -91,7 +91,7 @@ except:
 
 total = 0
 line = 1
-# open_invoice = list(open_invoice)
+open_invoice = list(open_invoice)
 inv = generate_invoice(address_kunde=adressData272_1,address_an=adressData272_4,bank=bankData)
 
 for oi in open_invoice:
@@ -112,31 +112,42 @@ for oi in open_invoice:
         logging.warning("failed to load adress data from azure table " + TABLE_PREISE)
     # Niedertarif / Nacht
     f = "PartitionKey eq 'Niedertarif' and Year eq " + str(oi.year)
-    print(f)
     try:
         niedertarif = table_service.query_entities(TABLE_PREISE , filter=f , timeout=60)
         niedertarif = list(niedertarif)   
     except:
         logging.warning("failed to load adress data from azure table " + TABLE_PREISE)
 
-    print(niedertarif)
-
     if "day" in oi.tarif:
         tarif = "Hochtarif / Tag"
         preis = str(hochtarif[0].Preis) + " " +  str(hochtarif[0].Währung)
-        total =+ (hochtarif[0].Preis * oi.value)
-        subtotal = str(hochtarif[0].Preis * oi.value) + " " +  str(hochtarif[0].Währung)
+        total += (hochtarif[0].Preis * oi.value)
+        subtotal = str(round(hochtarif[0].Preis * oi.value,2)) + " " +  str(hochtarif[0].Währung)
     else:
         tarif = "Niedertarif / Nacht"
         preis = str(niedertarif[0].Preis) + " " +  str(niedertarif[0].Währung)
-        total =+ (niedertarif[0].Preis * oi.value)
-        subtotal = str(niedertarif[0].Preis * oi.value) + " " +  str(niedertarif[0].Währung)
+        total += (niedertarif[0].Preis * oi.value)
+        subtotal = str(round(niedertarif[0].Preis * oi.value,2)) + " " +  str(niedertarif[0].Währung)
 
-    inv.newEntity(1,oi.Month,tarif, oi.value,preis ,subtotal)
+    value = str(oi.value) + " " + str(oi.unit)
+    inv.newEntity(line,MONTHS[oi.month] ,tarif, value ,preis ,subtotal)
+    line += 1
 
-inv.newLine(4)
-inv.drawTotal(5,"30.00", "CHF")
-inv.drawTotalFancy("30.00", "CHF")
+
+# Grundgebühr
+periode = MONTHS[open_invoice[0].month] + " - " + MONTHS[open_invoice[-1].month]
+anzMonate = round((line -1) /2)
+preis = str(grundgebühr[0].Preis) + " " +  str(grundgebühr[0].Währung)
+total += (grundgebühr[0].Preis / 12 * anzMonate)
+subtotal = str(round(grundgebühr[0].Preis / 12 * anzMonate,2)) + " " +  str(grundgebühr[0].Währung)
+
+inv.newEntity(line,periode ,"Grundgebühr pro Jahr", (str(anzMonate) + " Monate") , preis , subtotal)
+line += 1
+inv.newLine(line)
+line += 1
+total = round(total,2)
+inv.drawTotal(line,total, niedertarif[0].Währung)
+inv.drawTotalFancy(total, niedertarif[0].Währung)
 inv.save()
 
 
