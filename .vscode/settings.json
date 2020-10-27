@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "c:\\Git Repos\\stromabrechnung_loxone_azure\\venv\\Scripts\\python.exe",
+    "python.pythonPath": "venv_linux/bin/python",
     "azureFunctions.deploySubpath": ".",
     "azureFunctions.scmDoBuildDuringDeployment": true,
     "azureFunctions.pythonVenv": "venv",
