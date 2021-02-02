@@ -98,7 +98,7 @@ def getInvoice(t_strombezug, t_preise, adr_kunde, adr_an, bank_data):
             grundgebühr = list(grundgebühr)
         except:
             logging.warning(
-                "failed to load adress data from azure table " + t_preise)
+                "failed to load data from azure table " + t_preise)
 
         if "day" in oi.tarif:
             # Hochtarif / Tag
@@ -107,10 +107,11 @@ def getInvoice(t_strombezug, t_preise, adr_kunde, adr_an, bank_data):
                 hochtarif = table_service.query_entities(
                     t_preise, filter=f, timeout=60)
                 hochtarif = list(hochtarif)
-
+                #oi.cleard = True
+                #table_service.update_entity(t_strombezug, oi)
             except:
                 logging.warning(
-                    "failed to load adress data from azure table " + t_preise)
+                    "failed to load data from azure table " + t_preise)
 
             tarif = "Hochtarif / Tag"
             preis = str(hochtarif[0].Preis) + " " + str(hochtarif[0].Währung)
@@ -124,7 +125,8 @@ def getInvoice(t_strombezug, t_preise, adr_kunde, adr_an, bank_data):
                 niedertarif = table_service.query_entities(
                     t_preise, filter=f, timeout=60)
                 niedertarif = list(niedertarif)
-
+                #oi.cleard = True
+                #table_service.update_entity(t_strombezug, oi)
             except:
                 logging.warning(
                     "failed to load adress data from azure table " + t_preise)
