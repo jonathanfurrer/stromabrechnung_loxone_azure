@@ -22,7 +22,7 @@ MONTHS = [('Januar'),
           ('Februar'),
           ('März'),
           ('April'),
-          ('Mai',),
+          ('Mai'),
           ('Juni'),
           ('Juli'),
           ('August'),
@@ -87,7 +87,7 @@ def getInvoice(t_strombezug, t_preise, adr_kunde, adr_an, bank_data):
     inv = generate_invoice(address_kunde=adr_kunde,
                            address_an=adr_an, bank=bank_data)
 
-    for oi in open_invoice:
+    for oi in reversed(open_invoice):
         # Preise ------------------------------------------------
         # Grundgebühr
         f = "PartitionKey eq 'Grundgebühr' and Year eq " + str(oi.year)
@@ -144,8 +144,8 @@ def getInvoice(t_strombezug, t_preise, adr_kunde, adr_an, bank_data):
         line += 1
 
     # Grundgebühr
-    periode = MONTHS[open_invoice[0].month-1] + \
-        " - " + MONTHS[open_invoice[-1].month-1]
+    periode = MONTHS[open_invoice[-1].month-1] + \
+        " - " + MONTHS[open_invoice[0].month-1]
     anzMonate = round((line - 1) / 2)
     preis = str(grundgebühr[0].Preis) + " " + str(grundgebühr[0].Währung)
     total += (grundgebühr[0].Preis / 12 * anzMonate)
